@@ -11,3 +11,7 @@ CREATE TABLE skaters (
     foto VARCHAR(255) NOT NULL, 
     estado BOOLEAN NOT NULL
     );
+
+credenciales para ingresar 
+INSERT INTO skaters (email, nombre, password, anos_experiencia, especialidad, foto, estado) 
+VALUES ('correo@example.com', 'Nombre Skater', 'contrasena', 3, 'especialidad', '/ruta/a/foto.jpg', false);

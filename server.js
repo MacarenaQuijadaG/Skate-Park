@@ -1,13 +1,12 @@
+// Importaciones
 const express = require("express");
-const app = express();
-const { create } = require("express-handlebars");
+const { Pool } = require("pg");
+const exphbs = require("express-handlebars");
 const expressFileUpload = require("express-fileupload");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const { Pool } = require("pg");
-const bodyParser = require("body-parser");
-
 const secretKey = "key";
+
+// Configuración de PostgreSQL
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
@@ -16,8 +15,9 @@ const pool = new Pool({
     port: 5432,
 });
 
-// Server
-app.listen(3000, () => console.log("Servidor encendido PORT 3000!"));
+// Salida del servidor
+const app = express();
+app.listen(3000, () => console.log("Servidor PORT 3000!"));
 
 // Middlewares
 app.use(express.urlencoded({ extended: true }));
@@ -32,24 +32,23 @@ app.use(
 );
 app.use("/css", express.static(__dirname + "/node_modules/bootstrap/dist/css"));
 
-const hbs = create({
+// Configuración del motor de plantillas Handlebars
+const hbs = exphbs.create({
     defaultLayout: "main",
     layoutsDir: `${__dirname}/views/mainLayout`,
 });
-
 app.engine("handlebars", hbs.engine);
 app.set("view engine", "handlebars");
+
 
 // Rutas asociadas a los handlebars
 app.get("/", async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM skaters');
-        res.render("Home", { skaters: result.rows });
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        });
+        const query = 'SELECT * FROM skaters';
+        const { rows: skaters } = await pool.query(query);
+        res.render("Home", { skaters });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -58,18 +57,18 @@ app.get("/registro", (req, res) => {
 });
 
 app.get("/perfil", (req, res) => {
-    const { token } = req.query;
+    const { token } = req.query
     jwt.verify(token, secretKey, (err, skater) => {
         if (err) {
             res.status(500).send({
                 error: `Algo salió mal...`,
                 message: err.message,
                 code: 500
-            });
+            })
         } else {
             res.render("Perfil", { skater });
         }
-    });
+    })
 });
 
 app.get("/login", (req, res) => {
@@ -77,131 +76,98 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body
     try {
-        const result = await pool.query('SELECT * FROM skaters WHERE email = $1', [email]);
-        const skater = result.rows[0];
-        if (skater && await bcrypt.compare(password, skater.password)) {
-            const token = jwt.sign(skater, secretKey);
+        const query = 'SELECT * FROM skaters WHERE email = $1 AND password = $2';
+        const { rows } = await pool.query(query, [email, password]);
+        
+        if (rows.length === 1) {
+            const skater = rows[0];
+            const token = jwt.sign(skater, secretKey)
             res.status(200).send(token);
         } else {
-            res.status(400).send("Email o contraseña incorrectos");
+            res.status(401).send("Credenciales incorrectas");
         }
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
 app.get("/Admin", async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM skaters');
-        res.render("Admin", { skaters: result.rows });
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        });
+        const query = 'SELECT * FROM skaters';
+        const { rows: skaters } = await pool.query(query);
+        res.render("Admin", { skaters });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
-// API REST de Skaters
+// Ejemplo de ruta con consulta SQL para obtener todos los skaters
 app.get("/skaters", async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM skaters');
-        res.status(200).send(result.rows);
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        });
+        const query = 'SELECT * FROM skaters';
+        const { rows } = await pool.query(query);
+        res.status(200).json(rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
+// Ruta para agregar un nuevo skater a la base de datos
 app.post("/skaters", async (req, res) => {
-    const { email, nombre, password, anos_experiencia, especialidad } = req.body;
-    if (!req.files || Object.keys(req.files).length === 0) {
-        return res.status(400).send("No se encontró ningún archivo en la consulta");
-    }
-    const { foto } = req.files;
-    const pathPhoto = `/uploads/${foto.name}`;
-
+    const skater = req.body;
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        foto.mv(`${__dirname}/public${pathPhoto}`, async (err) => {
-            if (err) throw err;
-
-            const query = `
-                INSERT INTO skaters (email, nombre, password, anos_experiencia, especialidad, foto, estado)
-                VALUES ($1, $2, $3, $4, $5, $6, false) RETURNING *;
-            `;
-            const values = [email, nombre, hashedPassword, anos_experiencia, especialidad, pathPhoto];
-            const result = await pool.query(query, values);
-            res.status(201).redirect("/");
-        });
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        });
+        const query = 'INSERT INTO skaters (email, nombre, password, anos_experiencia, especialidad, foto, estado) VALUES ($1, $2, $3, $4, $5, $6, $7)';
+        const { email, nombre, password, anos_experiencia, especialidad, foto, estado } = skater;
+        await pool.query(query, [email, nombre, password, anos_experiencia, especialidad, foto, estado]);
+        res.status(201).redirect("/");
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
-app.put("/skaters", async (req, res) => {
-    const { id, nombre, anos_experiencia, especialidad } = req.body;
+// Ruta para actualizar datos de un skater
+app.put("/skaters/:id", async (req, res) => {
+    const { id } = req.params;
+    const { nombre, anos_experiencia, especialidad } = req.body;
     try {
-        const query = `
-            UPDATE skaters
-            SET nombre = $1, anos_experiencia = $2, especialidad = $3
-            WHERE id = $4;
-        `;
-        const values = [nombre, anos_experiencia, especialidad, id];
-        await pool.query(query, values);
+        const query = 'UPDATE skaters SET nombre = $1, anos_experiencia = $2, especialidad = $3 WHERE id = $4';
+        await pool.query(query, [nombre, anos_experiencia, especialidad, id]);
         res.status(200).send("Datos actualizados con éxito");
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
+// Ruta para actualizar el estado de un skater
 app.put("/skaters/status/:id", async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
     try {
-        const query = `
-            UPDATE skaters
-            SET estado = $1
-            WHERE id = $2;
-        `;
-        const values = [estado, id];
-        await pool.query(query, values);
-        res.status(200).send("Estado actualizado con éxito");
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        });
+        const query = 'UPDATE skaters SET estado = $1 WHERE id = $2';
+        const result = await pool.query(query, [estado, id]);
+        
+        // Verificar si se realizó la actualización correctamente
+        if (result.rowCount === 1) {
+            res.status(200).send("Estado actualizado con éxito");
+        } else {
+            res.status(404).send("Skater no encontrado");
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
+// Ruta para eliminar un skater
 app.delete("/skaters/:id", async (req, res) => {
     const { id } = req.params;
     try {
-        const query = `
-            DELETE FROM skaters
-            WHERE id = $1;
-        `;
+        const query = 'DELETE FROM skaters WHERE id = $1';
         await pool.query(query, [id]);
         res.status(200).send("Skater eliminado con éxito");
-    } catch (e) {
-        res.status(500).send({
-            error: `Algo salió mal... ${e}`,
-            code: 500
-        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
