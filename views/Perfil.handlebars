@@ -1,0 +1,90 @@
+<div class="py-4">
+    <h2>Datos del perfil</h2>
+    <hr class="w-50" />
+
+    <form>
+        <div class="form-group row w-50 m-auto">
+            <div class="form-group col-12 col-sm-6">
+                <label>Email</label>
+                <input name="email" class="form-control m-auto" disabled value="{{skater.email}}" />
+            </div>
+            <div class="form-group col-12 col-sm-6">
+                <label>Nombre</label>
+                <input name="nombre" class="form-control m-auto" value="{{skater.nombre}}" />
+            </div>
+            <div class="form-group col-12 col-sm-6">
+                <label>Password</label>
+                <input name="password" type="password" class="form-control m-auto" disabled value="{{skater.password}}" />
+            </div>
+            <div class="form-group col-12 col-sm-6">
+                <label>Repita la password</label>
+                <input type="password" class="form-control m-auto" disabled value="{{skater.password}}" />
+            </div>
+            <div class="form-group col-12 col-sm-6">
+                <label>Años de experiencia</label>
+                <input name="años_experiencia" class="form-control m-auto" value="{{skater.anos_experiencia}}" />
+            </div>
+            <div class="form-group col-12 col-sm-6">
+                <label>Especialidad</label>
+                <input name="especialidad" class="form-control m-auto" value="{{skater.especialidad}}" />
+            </div>
+
+        </div>
+        <div class="mb-1">
+            <button class="btn btn-primary" id="updateBtn">Actualizar</button>
+        </div>
+        <div>
+        </div>
+    </form>
+    <button class="btn btn-danger" id="deleteBtn">Eliminar cuenta</button>
+</div>
+
+<script>
+    const deleteBtn = document.getElementById("deleteBtn")
+
+    const id = `{{skater.id}}`
+
+    deleteBtn.addEventListener("click", async () => {
+
+        try {
+            const { data: token } = await axios.delete(`/skaters/${id}`)
+            alert("Usuario eliminado con éxito")
+            window.location = `/`
+        } catch ({ response }) {
+            const { data } = response
+            const { error } = data
+            alert(error)
+        }
+    })
+
+    const form = document.querySelector("form")
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault()
+
+        let [,nombre,,,años_experiencia, especialidad] = document.querySelectorAll("input")
+        
+        console.log("Valores de Input: ", nombre.value, años_experiencia.value, 
+        especialidad.value)
+
+        nombre = nombre.value
+        anos_experiencia = años_experiencia.value
+        especialidad = especialidad.value
+        const skater = {
+            id,
+            nombre,
+            anos_experiencia,
+            especialidad
+        }
+        try {
+            await axios.put("/skaters", skater)
+            alert("Datos actualizados con éxito")
+            window.location = "/"
+        } catch ({ response }) {
+            const { data } = response
+            const { error } = data
+            alert(error)
+        }
+
+    })
+</script>

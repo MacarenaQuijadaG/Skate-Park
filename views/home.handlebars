@@ -1,0 +1,42 @@
+<div class="py-4">
+  <h2>Home Lista de participantes</h2>
+
+  <hr />
+
+  <table class="table table-dark">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Foto</th>
+        <th scope="col">Nombre</th>
+        <th scope="col">Años de experiencia</th>
+        <th scope="col">Especialidad</th>
+        <th scope="col">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each skaters}}
+      <tr>
+        <td>{{this.id}}</td>
+        <td>
+          <div style="background-image: url({{this.foto}});"></div>
+        </td>
+        <td>{{this.nombre}}</td>
+        <td>{{this.anos_experiencia}}</td>
+        <td>{{this.especialidad}}</td>
+        {{#if this.estado}}
+        <td class="text-success font-weight-bold">Aprobado</td>
+        {{else}}
+        <td class="text-warning font-weight-bold">En revisión</td>
+        {{/if}}
+      </tr>
+      {{/each}}
+
+
+    </tbody>
+  </table>
+  <a href="/login">Iniciar Sesión</a> |
+  <a href="/registro">Registrarme</a> |
+  <a href="/admin">Administracion</a>
+</div>
+

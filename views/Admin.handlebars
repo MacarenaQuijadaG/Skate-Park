@@ -1,0 +1,59 @@
+<div class="py-4">
+  <h2>Administración</h2>
+  <hr class="w-50" />
+
+  <table class="table w-50 m-auto">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Foto</th>
+        <th scope="col">Nombre</th>
+        <th scope="col">Años de experiencia</th>
+        <th scope="col">Especialidad</th>
+        <th scope="col">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each skaters}}
+      <tr>
+        <td>{{this.id}}</td>
+        <td>
+          <div style="background-image: url({{this.foto}});"></div>
+        </td>
+        <td>{{this.nombre}}</td>
+        <td>{{this.anos_experiencia}}</td>
+        <td>{{this.especialidad}}</td>
+        <td>
+          {{#if this.estado}}
+          <input type="checkbox" checked onclick="changeStatus({{this.id}}, this)">
+          {{else}}
+          <input type="checkbox" onclick="changeStatus({{this.id}}, this)">
+          {{/if}}
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
+
+<script>
+  const changeStatus = async (id, e) => {
+
+    const estado = e.checked
+    console.log("Valor de estado recibido en ChangeStatus: ", estado)
+    try {
+      await axios.put(`/skaters/status/${id}`, {
+        estado
+      })
+      alert(estado ? "Skater aprobado!" : "Skater En revisión")
+      window.location = `/`
+    } catch ({ response }) {
+      const { data } = response
+      const { error } = data
+      alert(error)
+    }
+
+  }
+
+</script>
