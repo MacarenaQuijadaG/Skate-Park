@@ -3,18 +3,18 @@
 ## Descripción
 La Municipalidad de Santiago, ha organizado una competencia de Skate para impulsar el nivel deportivo de los jóvenes que desean representar a Chile en los X Games del próximo año, y han iniciado con la gestión para desarrollar la plataforma web en la que los participantes se podrán registrar y revisar el estado de su solicitud
 En esta prueba deberás ocupar todos tus conocimientos para desarrollar un sistema que involucre tus habilidades como Full Stack Developer, consolidando tus competencias en el frontend y backend.
-Las tecnologías y herramientas que deberás ocupar son las siguientes:
+### Las tecnologías y herramientas que deberás ocupar son las siguientes:
 - Express
 - Handlebars
 - PostgreSQL
 - JWT
 - Express-fileupload
 ## Visuales 
-### Despliega la lista
+### Despliega la lista de Participantes
 ![1](https://github.com/MacarenaQuijadaG/Skate-Park/assets/50925916/68dfc4cb-6472-4d3b-aaa2-b94c810a3d80)
 ### Formulario de Registro
 ![2](https://github.com/MacarenaQuijadaG/Skate-Park/assets/50925916/9a133b71-5c30-4461-849e-3c118e68a037)
-### Editar daros del Formulario
+### Editar datos del Formulario
 ![3](https://github.com/MacarenaQuijadaG/Skate-Park/assets/50925916/e23edeff-c8b2-4843-b327-4d9b87db47e1)
 ### Inicio de Sesion
 ![4](https://github.com/MacarenaQuijadaG/Skate-Park/assets/50925916/8320314a-87f6-4386-9580-a6ca08ddd78b)
