@@ -15,11 +15,11 @@
       </tr>
     </thead>
     <tbody>
-      {{#each skaters}}
-      <tr>
+    {{#each skaters}}
+    <tr>
         <td>{{this.id}}</td>
         <td>
-          <div style="background-image: url({{this.foto}});"></div>
+            <div style="background-image: url({{this.foto}});"></div>
         </td>
         <td>{{this.nombre}}</td>
         <td>{{this.anos_experiencia}}</td>
@@ -29,8 +29,9 @@
         {{else}}
         <td class="text-warning font-weight-bold">En revisión</td>
         {{/if}}
-      </tr>
-      {{/each}}
+    </tr>
+    {{/each}}
+</tbody>
 
 
     </tbody>

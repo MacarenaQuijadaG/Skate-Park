@@ -28,6 +28,7 @@ app.use(
         limits: 5000000,
         abortOnLimit: true,
         responseOnLimit: "El tamaño de la imagen supera el límite permitido",
+        createParentPath: true // Crear la carpeta si no existe
     })
 );
 app.use("/css", express.static(__dirname + "/node_modules/bootstrap/dist/css"));
@@ -39,7 +40,6 @@ const hbs = exphbs.create({
 });
 app.engine("handlebars", hbs.engine);
 app.set("view engine", "handlebars");
-
 
 // Rutas asociadas a los handlebars
 app.get("/", async (req, res) => {
@@ -57,33 +57,33 @@ app.get("/registro", (req, res) => {
 });
 
 app.get("/perfil", (req, res) => {
-    const { token } = req.query
+    const { token } = req.query;
     jwt.verify(token, secretKey, (err, skater) => {
         if (err) {
             res.status(500).send({
                 error: `Algo salió mal...`,
                 message: err.message,
                 code: 500
-            })
+            });
         } else {
             res.render("Perfil", { skater });
         }
-    })
+    });
 });
-
+//Rutas del Login
 app.get("/login", (req, res) => {
     res.render("Login");
 });
 
 app.post("/login", async (req, res) => {
-    const { email, password } = req.body
+    const { email, password } = req.body;
     try {
         const query = 'SELECT * FROM skaters WHERE email = $1 AND password = $2';
         const { rows } = await pool.query(query, [email, password]);
         
         if (rows.length === 1) {
             const skater = rows[0];
-            const token = jwt.sign(skater, secretKey)
+            const token = jwt.sign(skater, secretKey);
             res.status(200).send(token);
         } else {
             res.status(401).send("Credenciales incorrectas");
@@ -104,7 +104,7 @@ app.get("/Admin", async (req, res) => {
     }
 });
 
-// Ejemplo de ruta con consulta SQL para obtener todos los skaters
+// Ruta SQL para obtener todos los skaters
 app.get("/skaters", async (req, res) => {
     try {
         const query = 'SELECT * FROM skaters';
@@ -118,10 +118,22 @@ app.get("/skaters", async (req, res) => {
 // Ruta para agregar un nuevo skater a la base de datos
 app.post("/skaters", async (req, res) => {
     const skater = req.body;
+    if (!req.files || Object.keys(req.files).length === 0) {
+        return res.status(400).send('No se subió ninguna imagen.');
+    }
+
+    const { email, nombre, password, anos_experiencia, especialidad, estado = false } = skater; // Valor predeterminado para estado
+    const { foto } = req.files;
+
+    const fotoPath = `/uploads/${Date.now()}_${foto.name}`;
+    const uploadPath = __dirname + '/public' + fotoPath;
+
     try {
+        await foto.mv(uploadPath);
+
         const query = 'INSERT INTO skaters (email, nombre, password, anos_experiencia, especialidad, foto, estado) VALUES ($1, $2, $3, $4, $5, $6, $7)';
-        const { email, nombre, password, anos_experiencia, especialidad, foto, estado } = skater;
-        await pool.query(query, [email, nombre, password, anos_experiencia, especialidad, foto, estado]);
+        await pool.query(query, [email, nombre, password, anos_experiencia, especialidad, fotoPath, estado]);
+
         res.status(201).redirect("/");
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -131,13 +143,29 @@ app.post("/skaters", async (req, res) => {
 // Ruta para actualizar datos de un skater
 app.put("/skaters/:id", async (req, res) => {
     const { id } = req.params;
-    const { nombre, anos_experiencia, especialidad } = req.body;
-    try {
-        const query = 'UPDATE skaters SET nombre = $1, anos_experiencia = $2, especialidad = $3 WHERE id = $4';
-        await pool.query(query, [nombre, anos_experiencia, especialidad, id]);
-        res.status(200).send("Datos actualizados con éxito");
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    const { nombre, anos_experiencia, especialidad, estado } = req.body;
+
+    if (req.files && req.files.foto) {
+        const { foto } = req.files;
+        const fotoPath = `/uploads/${Date.now()}_${foto.name}`;
+        const uploadPath = __dirname + '/public' + fotoPath;
+
+        try {
+            await foto.mv(uploadPath);
+            const query = 'UPDATE skaters SET nombre = $1, anos_experiencia = $2, especialidad = $3, foto = $4, estado = $5 WHERE id = $6';
+            await pool.query(query, [nombre, anos_experiencia, especialidad, fotoPath, estado, id]);
+            res.status(200).send("Datos actualizados con éxito");
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    } else {
+        try {
+            const query = 'UPDATE skaters SET nombre = $1, anos_experiencia = $2, especialidad = $3, estado = $4 WHERE id = $5';
+            await pool.query(query, [nombre, anos_experiencia, especialidad, estado, id]);
+            res.status(200).send("Datos actualizados con éxito");
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
     }
 });
 
