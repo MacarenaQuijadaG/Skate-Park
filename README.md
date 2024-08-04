@@ -54,7 +54,7 @@ Instrucciones y ejemplos para ejecutar el conjunto de pruebas.
 
 - nodemon server.js
 
-## Despliegue 📦
+## Despliegue 📦 
 
 Se desplega a travez de la consola de visual studio con power shell.
 
