@@ -8,6 +8,7 @@ La Municipalidad de Santiago, ha organizado una competencia de Skate para impuls
 - PostgreSQL
 - JWT
 - Express-fileupload
+- Nodemon
 ## Visuales 
 ### Despliega la lista de Participantes
 ![1](https://github.com/MacarenaQuijadaG/Skate-Park/assets/50925916/68dfc4cb-6472-4d3b-aaa2-b94c810a3d80)
