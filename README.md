@@ -38,7 +38,7 @@ Lista de software y herramientas, incluyendo versiones, que necesitas para insta
 - "jsonwebtoken": "^9.0.2",
 - "nodemon": "^3.1.1",
 - "pg": "^8.11.5"
-
+ 
         
 ### Instalación 🔧
 
